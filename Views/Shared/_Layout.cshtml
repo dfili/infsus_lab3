@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tamb</title>
+    @* Link to Tailwind CSS CDN for styling *@
+    <script src="https://cdn.tailwindcss.com"></script>
+    @* Optional: Link to your own custom CSS file if needed *@
+    @* <link rel="stylesheet" href="~/css/site.css" /> *@
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <header class="bg-white shadow-sm">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <a asp-area="" asp-controller="Home" asp-action="Index" class="text-xl font-bold text-gray-800">Informacijski sustav tamburaškog orkestra</a>
+            @* Add navigation links here if needed *@
+        </div>
+    </header>
+
+    <div class="container mx-auto mt-4">
+        <main role="main" class="pb-3">
+            @RenderBody() @* This is where the content of your specific views will be rendered *@
+        </main>
+    </div>
+
+    <footer class="border-t mt-8 py-4 text-center text-gray-500 text-sm">
+        &copy; 2025 - Tamb
+    </footer>
+
+    @* Optional: Include JavaScript files if needed *@
+    @* <script src="~/lib/jquery/dist/jquery.min.js"></script> *@
+    @* <script src="~/js/site.js" asp-append-version="true"></script> *@
+
+    @* Render any sections defined in specific views (e.g., Scripts section) *@
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
