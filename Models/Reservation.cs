@@ -1,6 +1,6 @@
 using System;
 
-namespace Tamb.Models
+namespace tamb.Models
 {
     // Represents a reservation for an instrument (basic structure)
     public class Reservation

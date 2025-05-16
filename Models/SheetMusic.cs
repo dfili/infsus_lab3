@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations; // Required for data annotations if needed later
 
-namespace Tamb.Models
+namespace tamb.Models
 {
     // Represents a piece of digital sheet music in the inventory
     public class SheetMusic
     {
         // Unique identifier for the sheet music
-        public int Id { get; set; }
+        public int id { get; set; }
 
         // Title of the musical piece
         [Required] // Example data annotation: Title is required

@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations; // Required for data annotations if needed later
 
-namespace Tamb.Models
+namespace tamb.Models
 {
     // Represents an instrument in the inventory
     public class Instrument

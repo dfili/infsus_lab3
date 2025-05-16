@@ -1,40 +1,33 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
-using Tamb.Models; // Make sure to include your models namespace
+using tamb.Models; // Make sure to include your models namespace
+using tamb.Data; // Include your data context namespace
 
-namespace Tamb.Controllers
+namespace tamb.Controllers
 {
+    
     // Controller to handle inventory-related requests
     public class InstrumentInventoryController : Controller
     {
-        // --- In-memory Data Store (Replace with Database Integration) ---
-        private static List<Instrument> _instruments = new List<Instrument>
-        {
-            new Instrument { Id = 1, Name = "Acoustic Guitar", Type = "String", Manufacturer = "Fender", Model = "Stratocaster", Year = 2020, Condition = "Excellent", Status = "Available", Notes = "Classic acoustic sound."},
-            new Instrument { Id = 2, Name = "Digital Piano", Type = "Keyboard", Manufacturer = "Yamaha", Model = "P-45", Year = 2021, Condition = "Good", Status = "Available", Notes = "88 weighted keys."},
-            new Instrument { Id = 3, Name = "Drum Kit", Type = "Percussion", Manufacturer = "Pearl", Model = "Export", Year = 2018, Condition = "Fair", Status = "Loaned", Notes = "Full 5-piece kit.", },
-            new Instrument { Id = 4, Name = "Violin", Type = "String", Manufacturer = "Stentor", Model = "Student I", Year = 2022, Condition = "Excellent", Status = "Available", Notes = "Beginner violin."},
-            new Instrument { Id = 5, Name = "Bass Guitar", Type = "String", Manufacturer = "Ibanez", Model = "SR300", Year = 2019, Condition = "Good", Status = "Available", Notes = "Active pickups."}
-        };
-        // --------------------------------------------------------------
+        private readonly ApplicationDbContext _context;
 
+        public InstrumentInventoryController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
         // Action method for the Inventory Index page
         // Handles displaying the list of instruments and search
         public IActionResult Index(string searchString)
         {
-            // Get all instruments
-            var instruments = from i in _instruments
-                              select i;
+            var instruments = _context.Instruments.AsQueryable(); // Start query from DbContext
 
-            // Apply search filter if a search string is provided
             if (!string.IsNullOrEmpty(searchString))
             {
                 instruments = instruments.Where(s => s.Name.Contains(searchString) || s.Type.Contains(searchString) || s.Manufacturer.Contains(searchString));
             }
 
-            // Pass the filtered list of instruments to the view
-            return View(instruments.ToList());
+            return View(instruments.ToList()); // Execute the query and pass to view
         }
 
         // Action method for the Instrument Details page
@@ -48,7 +41,7 @@ namespace Tamb.Controllers
             }
 
             // Find the instrument by ID in the in-memory list
-            var instrument = _instruments.FirstOrDefault(i => i.Id == id);
+            var instrument = _context.Instruments.AsQueryable().FirstOrDefault(i => i.Id == id);
 
             // If the instrument is not found, return a Not Found result
             if (instrument == null)
@@ -76,7 +69,7 @@ namespace Tamb.Controllers
             // For this example, we'll just simulate a successful reservation and redirect
             // In a real app, add error handling and proper logic.
 
-            var instrument = _instruments.FirstOrDefault(i => i.Id == instrumentId);
+            var instrument = _context.Instruments.AsQueryable().FirstOrDefault(i => i.Id == instrumentId);
             if (instrument != null && instrument.Status == "Available")
             {
                 instrument.Status = "Reserved"; // Simple status update
@@ -85,7 +78,7 @@ namespace Tamb.Controllers
             }
             else
             {
-                 ViewData["ReservationStatus"] = "Failed"; // Pass failure message (optional)
+                ViewData["ReservationStatus"] = "Failed"; // Pass failure message (optional)
             }
 
 

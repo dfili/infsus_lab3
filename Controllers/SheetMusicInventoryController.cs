@@ -1,33 +1,46 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
 using System.Linq;
-using Tamb.Models; // Make sure to include your models namespace
-using System.IO; // Required for file handling (for download simulation)
+using Microsoft.EntityFrameworkCore;
+using tamb.Models; // Make sure to include your models namespace
+using tamb.Data; // Required for file handling (for download simulation)
 
-namespace Tamb.Controllers
+namespace tamb.Controllers
 {
     // Controller to handle sheet music-related requests
     public class SheetMusicInventoryController : Controller
     {
-        // --- In-memory Data Store (Replace with Database Integration) ---
-        private static List<SheetMusic> _sheetMusic = new List<SheetMusic>
+        private readonly ApplicationDbContext _context;
+        public SheetMusicInventoryController(ApplicationDbContext context)
         {
-            new SheetMusic { Id = 1, Title = "Für Elise", Composer = "Ludwig van Beethoven", Instrumentation = "Piano", Genre = "Classical", FileName = "fur_elise.pdf", DateAdded = DateTime.UtcNow.AddDays(-30), Notes = "Popular piano piece." },
-            new SheetMusic { Id = 2, Title = "Take Five", Composer = "Paul Desmond", Arranger = "Dave Brubeck Quartet", Instrumentation = "Alto Saxophone, Piano, Bass, Drums", Genre = "Jazz", FileName = "take_five.pdf", DateAdded = DateTime.UtcNow.AddDays(-15), Notes = "Famous jazz standard." },
-            new SheetMusic { Id = 3, Title = "Bohemian Rhapsody", Composer = "Freddie Mercury", Instrumentation = "Piano, Vocals", Genre = "Rock", FileName = "bohemian_rhapsody_piano.pdf", DateAdded = DateTime.UtcNow.AddDays(-5), Notes = "Piano/Vocal arrangement." }
-        };
-        // --------------------------------------------------------------
+            _context = context;
+        }
 
         // Action method for the Sheet Music Inventory Index page
         // Handles displaying the list of sheet music
-        public IActionResult Index()
+        public async Task<IActionResult> Index(string searchString) // Made async to use async EF Core methods
         {
-            // Pass the list of sheet music to the view
-            return View(_sheetMusic.ToList());
+            // Start query from the DbContext's DbSet for SheetMusic
+            var sheetMusic = _context.SheetMusic.AsQueryable();
+
+            // Apply search filter if a search string is provided
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                // Filter by Title, Composer, Instrumentation, or Genre
+                sheetMusic = sheetMusic.Where(s => s.Title.Contains(searchString)
+                                                   || s.Composer.Contains(searchString)
+                                                   || s.Instrumentation.Contains(searchString)
+                                                   || s.Genre.Contains(searchString));
+            }
+
+            // Pass the filtered list of sheet music to the view after executing the query asynchronously
+            return View(await sheetMusic.ToListAsync()); // Use ToListAsync for async operation
         }
 
         // Action method to simulate downloading a sheet music file
-        public IActionResult Download(int? id) // Nullable int for the ID
+        // This remains similar to the previous version, but would ideally use the DbContext
+        // to retrieve the file path or identifier from the database.
+        public async Task<IActionResult> Download(int? id) // Made async
         {
             // If no ID is provided, return a Not Found result
             if (id == null)
@@ -35,8 +48,9 @@ namespace Tamb.Controllers
                 return NotFound();
             }
 
-            // Find the sheet music by ID in the in-memory list
-            var music = _sheetMusic.FirstOrDefault(m => m.Id == id);
+
+            // Find the sheet music by ID using the DbContext asynchronously
+            var music = await _context.SheetMusic.FirstOrDefaultAsync(m => m.id == id);
 
             // If the sheet music is not found, return a Not Found result
             if (music == null)
