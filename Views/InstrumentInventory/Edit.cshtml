@@ -1,0 +1,90 @@
+@model tamb.Models.Instrument
+
+@{
+    ViewData["Title"] = "Edit Instrument";
+}
+
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-6">Edit Instrument</h1>
+
+    <div class="bg-white shadow-md rounded-md p-6">
+        @* Form to edit an existing instrument *@
+        <form asp-action="Edit">
+             @* Include validation summary *@
+            <div asp-validation-summary="ModelOnly" class="text-red-600 mb-4"></div>
+            @* Hidden input for the Instrument Id (required for the POST action) *@
+            <input type="hidden" asp-for="Id" />
+
+            @* Form fields for each instrument property (similar to Create view) *@
+            <div class="mb-4">
+                <label asp-for="Name" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="Name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="Name" class="text-red-600 text-sm"></span>
+            </div>
+
+             <div class="mb-4">
+                <label asp-for="Type" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="Type" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="Type" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Manufacturer" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="Manufacturer" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="Manufacturer" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Model" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="Model" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="Model" class="text-red-600 text-sm"></span>
+            </div>
+
+             <div class="mb-4">
+                <label asp-for="Year" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="Year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="Year" class="text-red-600 text-sm"></span>
+            </div>
+
+             <div class="mb-4">
+                <label asp-for="Condition" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="Condition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="Condition" class="text-red-600 text-sm"></span>
+            </div>
+
+             <div class="mb-4">
+                <label asp-for="Status" class="block text-sm font-medium text-gray-700"></label>
+                 @* Example: Use a select list for Status *@
+                <select asp-for="Status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="Available">Available</option>
+                    <option value="Reserved">Reserved</option>
+                    <option value="Loaned">Loaned</option>
+                    <option value="Maintenance">Maintenance</option>
+                </select>
+                <span asp-validation-for="Status" class="text-red-600 text-sm"></span>
+            </div>
+
+             <div class="mb-4">
+                <label asp-for="Notes" class="block text-sm font-medium text-gray-700"></label>
+                <textarea asp-for="Notes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
+                <span asp-validation-for="Notes" class="text-red-600 text-sm"></span>
+            </div>
+
+            @* Submit button *@
+            <div class="flex justify-start">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-8">
+        @* Link back to the Inventory List *@
+        <a asp-action="Index" class="text-indigo-600 hover:text-indigo-900">Back to Inventory List</a>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");} @* Include client-side validation scripts *@
+}
