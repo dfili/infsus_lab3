@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("tamb")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+e39e1fc54f5dcbfca477aa8a8be20db6b630d2bc")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dd9e0433e290ceaa10a3adf7deab41eb57446961")]
 [assembly: System.Reflection.AssemblyProductAttribute("tamb")]
 [assembly: System.Reflection.AssemblyTitleAttribute("tamb")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

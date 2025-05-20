@@ -1,0 +1,135 @@
+@model tamb.Models.Reservation
+
+@{
+    ViewData["Title"] = "Kreiraj Rezervaciju";
+}
+
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-6">Kreiraj Rezervaciju</h1>
+
+    <div class="bg-white shadow-md rounded-md p-6">
+        <form asp-action="Create" method="post"> 
+            @Html.AntiForgeryToken()
+            @* Include validation summary to display model state errors *@
+            @* This will now also display the custom error added in the controller if the reservation limit is exceeded *@
+            
+            <div asp-validation-summary="ModelOnly" class="text-red-600 mb-4"></div>
+
+            @* Padajuća lista za odabir Instrumenta *@
+            <div class="mb-4">
+                <label asp-for="InstrumentId" class="block text-sm font-medium text-gray-700"></label>
+                @* asp-for="InstrumentId" povezuje padajuću listu s InstrumentId svojstvom modela *@
+                @* asp-items="ViewBag.InstrumentId" popunjava listu opcija iz SelectList-a proslijeđenog iz kontrolera *@
+                <select asp-for="InstrumentId" asp-items="ViewBag.InstrumentId"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="">-- Odaberite Instrument --</option> @* Opcija za odabir *@
+                </select>
+                <span asp-validation-for="InstrumentId" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="ReservedById" class="block text-sm font-medium text-gray-700"></label>
+                <select asp-for="ReservedById" asp-items="ViewBag.ReservedById"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="">-- Odaberite Osobu --</option>
+                </select>
+                @* Validation span for PersonId - will show the custom error message *@
+                <span asp-validation-for="ReservedById" class="text-red-600 text-sm"></span>
+                @* Placeholder for the AJAX-driven warning message *@
+                <div id="personReservationWarning" class="text-orange-600 text-sm mt-1"></div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="StartDate" type="date" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="StartDate"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="StartDate" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="EndDate" type="date" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="EndDate"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="EndDate" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Status" class="block text-sm font-medium text-gray-700"></label>
+                <select asp-for="Status"
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="">-- Odaberite Status --</option>
+                    <option value="Pending">Na čekanju</option>
+                    <option value="Confirmed">Potvrđeno</option>
+                    <option value="Cancelled">Otkazano</option>
+                </select>
+                <span asp-validation-for="Status" class="text-red-600 text-sm"></span>
+            </div>
+
+
+            <div class="flex justify-start">
+                <button type="submit"
+                    class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
+                    Kreiraj
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-8">
+        <a asp-action="Index" class="text-indigo-600 hover:text-indigo-900">Natrag na popis rezervacija</a>
+    </div>
+</div>
+
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    @* --- JavaScript for AJAX check --- *@
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const personSelect = document.getElementById('ReservedById'); // Get the Person dropdown
+            const personReservationWarning = document.getElementById('personReservationWarning'); // Get the warning placeholder
+            const submitButton = document.querySelector('button[type="submit"]'); // Get the submit button
+
+            if (personSelect) {
+                personSelect.addEventListener('change', function () {
+                    const selectedPersonId = this.value; // Get the selected person's ID
+
+                    // Clear previous warning
+                    personReservationWarning.textContent = '';
+                    // Enable submit button by default
+                    //submitButton.disabled = false;
+
+                    // Only perform check if a person is actually selected (value is not empty)
+                    if (selectedPersonId) {
+                        // Perform AJAX call to the controller
+                        fetch(`/Reservation/CheckActiveReservations?personId=${selectedPersonId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (!data.canReserve) {
+                                    // If the person cannot reserve (too many active reservations)
+                                    personReservationWarning.textContent = data.message; // Display the warning message
+                                    // Optionally, disable the submit button to prevent submission
+                                    // submitButton.disabled = true;
+                                    // Optionally, reset the dropdown selection
+                                    // personSelect.value = ""; // This clears the selection visually
+                                    // Note: Resetting the value here client-side is for UI feedback.
+                                    // The server-side check in the POST action is the definitive validation.
+                                }
+                            })
+                            .catch(fetcherror => {
+                                console.error('Error checking reservations:', fetcherror);
+                                personReservationWarning.textContent = 'Došlo je do pogreške prilikom provjere rezervacija.'; // Show a generic error
+                                // submitButton.disabled = true; // Optionally disable on error
+                            });
+                    } 
+                    else {
+                        console.error('Cant  get person id');
+                    }
+                });
+            }
+        });
+    </script> 
+}

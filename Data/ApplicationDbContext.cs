@@ -17,6 +17,16 @@ namespace tamb.Data // You might create a 'Data' folder for this
         public DbSet<Instrument> Instruments { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
         public DbSet<SheetMusic> SheetMusic { get; set; }
+        public DbSet<Person> Persons { get; set; } // Assuming you have a Person model
 
+
+        // protected override void OnModelCreating(ModelBuilder modelBuilder)
+        // {
+        //     modelBuilder.Entity<Person>()
+        //         .HasMany(p => p.Rezervacije)
+        //         .WithOne(r => r.Person)
+        //         .HasForeignKey(r => r.PersonId);
+        //     base.OnModelCreating(modelBuilder);
+        // }
     }
 }

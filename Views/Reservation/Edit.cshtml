@@ -1,0 +1,79 @@
+@model tamb.Models.Reservation
+
+@{
+    ViewData["Title"] = "Uredi Rezervaciju";
+}
+
+<div class="container mx-auto p-4">
+    <h1 class="text-3xl font-bold mb-6">Uredi Rezervaciju</h1>
+
+    <div class="bg-white shadow-md rounded-md p-6">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-red-600 mb-4"></div>
+            <input type="hidden" asp-for="Id" /> @* Skriveno polje za ID *@
+
+            @* Padajuća lista za odabir Instrumenta *@
+            <div class="mb-4">
+                <label asp-for="InstrumentId" class="block text-sm font-medium text-gray-700"></label>
+                @* asp-for="InstrumentId" povezuje padajuću listu s InstrumentId svojstvom modela *@
+                @* asp-items="ViewBag.InstrumentId" popunjava listu opcija iz SelectList-a proslijeđenog iz kontrolera *@
+                @* SelectList u kontroleru je kreiran s odabranom vrijednošću (rezervacija.InstrumentId) *@
+                <select asp-for="InstrumentId" asp-items="ViewBag.InstrumentId" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="">-- Odaberite Instrument --</option> @* Opcija za odabir *@
+                </select>
+                <span asp-validation-for="InstrumentId" class="text-red-600 text-sm"></span>
+            </div>
+
+            @* --- Dropdown for selecting Person --- *@
+            <div class="mb-4">
+                <label asp-for="ReservedById" class="block text-sm font-medium text-gray-700"></label>
+                @* The asp-for="PersonId" combined with the model passed to the view
+                   will automatically select the correct person in the dropdown. *@
+                <select asp-for="ReservedById" asp-items="ViewBag.PersonId as SelectList" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                    <option value="">-- Odaberite Osobu --</option>
+                </select>
+                <span asp-validation-for="ReservedById" class="text-red-600 text-sm"></span>
+                 @* You might also want the AJAX check and warning here, similar to Create *@
+                 <div id="personReservationWarningEdit" class="text-orange-600 text-sm mt-1"></div>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="StartDate" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="StartDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="StartDate" class="text-red-600 text-sm"></span>
+            </div>
+
+             <div class="mb-4">
+                <label asp-for="EndDate" class="block text-sm font-medium text-gray-700"></label>
+                <input asp-for="EndDate" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
+                <span asp-validation-for="EndDate" class="text-red-600 text-sm"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Status" class="block text-sm font-medium text-gray-700"></label>
+                <select asp-for="Status" asp-items="@(new SelectList(new List<string>{"Pending", "Confirmed", "Cancelled"}))" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                     <option value="">-- Odaberite Status --</option>
+                     <option value="Pending">Na čekanju</option>
+                    <option value="Confirmed">Potvrđeno</option>
+                    <option value="Cancelled">Otkazano</option>
+                </select>
+                <span asp-validation-for="Status" class="text-red-600 text-sm"></span>
+            </div>
+
+
+            <div class="flex justify-start">
+                <button type="submit" class="inline-flex items-center px-4 py-2 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Spremi promjene
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div class="mt-8">
+        <a asp-action="Index" class="text-indigo-600 hover:text-indigo-900">Natrag na popis rezervacija</a>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
