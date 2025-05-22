@@ -17,18 +17,20 @@ namespace tamb.Controllers
         {
             _context = context;
         }
-        // Action method for the Inventory Index page
-        // Handles displaying the list of instruments and search
-        public IActionResult Index(string searchString)
-        {
-            var instruments = _context.Instruments.AsQueryable(); // Start query from DbContext
 
+        public async Task<IActionResult> Index(string? searchString)
+        {
+            var instruments = _context.Instruments.AsQueryable(); 
+            
             if (!string.IsNullOrEmpty(searchString))
             {
-                instruments = instruments.Where(s => s.Name.Contains(searchString) || s.Type.Contains(searchString) || s.Manufacturer.Contains(searchString));
+                ViewData["CurrentFilter"] = searchString;
+                instruments = instruments.Where(s => s.Name.ToLower().Contains(searchString.ToLower()) ||
+                                s.Type.ToLower().Contains(searchString.ToLower()) ||
+                                s.Manufacturer.ToLower().Contains(searchString.ToLower()));
             }
 
-            return View(instruments.ToList()); // Execute the query and pass to view
+            return View(await instruments.ToListAsync());
         }
 
         // GET: Inventory/Create
@@ -52,7 +54,7 @@ namespace tamb.Controllers
                     await _context.SaveChangesAsync();
                     return RedirectToAction(nameof(Index));
                 }
-                catch (Exception ex)
+                catch (Exception)
                 {
                     ModelState.AddModelError("", "Unable to save changes. Try again, and if the problem persists, see your system administrator.");
                 }

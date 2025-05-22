@@ -12,7 +12,7 @@
         <a asp-action="Create" class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
             Add New Instrument
         </a>
-    </div
+    </div>
 
     @* Search Bar *@
     <form asp-controller="InstrumentInventory" asp-action="Index" method="get" class="mb-6">
@@ -98,7 +98,12 @@
                                     <dt class="font-medium text-gray-500">Notes:</dt>
                                     <dd class="text-gray-900">@Html.DisplayFor(modelItem => item.Notes)</dd>
                                 </dl>
-
+                                <div class="mt-6">
+                                    <a asp-controller="Reservation" asp-action="Create" asp-route-instrumentId="@item.Id"
+                                       class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                        Rezerviraj ovaj instrument
+                                    </a>
+                                </div>
                                 
                                 
                             </div>
@@ -134,6 +139,7 @@
                         detailsRow.classList.toggle('hidden');
                         this.classList.toggle('expanded');
                     }
+
                 });
             });
         });
