@@ -281,7 +281,7 @@ namespace tamb.Controllers
                     await _context.SaveChangesAsync();
                     _logger.LogInformation("Rezervacija ID: {ReservationId} uspješno ažurirana.", reservation.Id);
 
-                    TempData["SuccessMessage"] = "Rezervacija uspješno ažurirana!";
+                    ViewData["SuccessMessage"] = "Rezervacija uspješno ažurirana!";
                 }
                 catch (DbUpdateConcurrencyException ex)
                 {
