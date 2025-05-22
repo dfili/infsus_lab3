@@ -7,7 +7,8 @@ using tamb.Data; // Vaš DbContext namespace
 using tamb.Models; // Vaši modeli namespace
 using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
-using System; // Required for DateTime
+using System;
+using Microsoft.EntityFrameworkCore.Metadata.Internal; // Required for DateTime
 
 namespace tamb.Controllers
 {
@@ -57,11 +58,13 @@ namespace tamb.Controllers
 
 
         // GET: Reservation/Create
-        public async Task<IActionResult> Create()
+        public async Task<IActionResult> Create(int? instrumentId)
         {
-            _logger.LogInformation("Prikaz forme za kreiranje nove rezervacije.");
-            ViewBag.InstrumentId = new SelectList(await _context.Instruments.ToListAsync(), "Id", "Name");
-            ViewBag.ReservedById = new SelectList(await _context.Persons.ToListAsync(), "Id", "ImePrezime"); // Corrected ViewBag name
+             _logger.LogInformation("Prikaz forme za kreiranje nove rezervacije.");
+            var allInstruments = await _context.Instruments.OrderBy(i => i.Name).ToListAsync();
+            ViewBag.InstrumentId = new SelectList(allInstruments, "Id", "Name", instrumentId); // Pass instrumentId for pre-selection
+            ViewBag.ReservedById = new SelectList(await _context.Persons.ToListAsync(), "Id", "ImePrezime");
+           
             return View();
         }
 
@@ -72,19 +75,52 @@ namespace tamb.Controllers
         {
             _logger.LogInformation("Pokušaj kreiranja nove rezervacije za instrument ID: {InstrumentId}, osobu ID: {PersonId}", reservation.InstrumentId, reservation.ReservedById);
 
-            // --- Server-side check for active reservations ---
-            // Adjusted for nullable EndDate and correct UTC comparison
-            // var activeReservationsCount = await _context.Reservations
-            //     .CountAsync(r => r.ReservedById == reservation.ReservedById &&
-            //                      (r.Status == "Confirmed" || r.Status == "Loaned") &&
-            //                      (r.EndDate == null || r.EndDate.Value.ToUniversalTime().Date >= DateTime.UtcNow.Date));
+            // --- 1. Validate Date Order ---
+            if (reservation.EndDate.HasValue && reservation.StartDate > reservation.EndDate.Value)
+            {
+                ModelState.AddModelError("EndDate", "Datum završetka ne može biti prije datuma početka.");
+                _logger.LogWarning("Kreiranje rezervacije: Datum završetka ({EndDate}) je prije datuma početka ({StartDate}).", reservation.EndDate, reservation.StartDate);
+            }
 
-            // if (activeReservationsCount >= 3)
-            // {
-            //     _logger.LogWarning("Osoba ID: {PersonId} ima previše aktivnih rezervacija ({Count}).", reservation.ReservedById, activeReservationsCount);
-            //     ModelState.AddModelError("ReservedById", "Osoba već ima 3 ili više aktivnih rezervacija.");
-            // }
-            // -------------------------------------------------
+            // --- 2. Check for Overlapping Reservations for the Instrument ---
+            // Only perform this check if InstrumentId is valid and dates are valid
+            if (reservation.InstrumentId > 0 && ModelState.IsValid)
+            {
+                // Convert dates to UTC for comparison with database 'timestamp with time zone'
+                var newReservationStartDateUtc = DateTime.SpecifyKind(reservation.StartDate, DateTimeKind.Utc);
+                var newReservationEndDateUtc = reservation.EndDate.HasValue ? DateTime.SpecifyKind(reservation.EndDate.Value, DateTimeKind.Utc) : (DateTime?)null;
+
+                var overlappingReservation = await _context.Reservations
+                    .Where(r => r.InstrumentId == reservation.InstrumentId &&
+                                (r.Status == "Confirmed" || r.Status == "Loaned") && // Only consider active/loaned reservations
+                                // Check for overlap: (StartA <= EndB) AND (EndA >= StartB)
+                                newReservationStartDateUtc <= (r.EndDate == null ? DateTime.MaxValue : r.EndDate.Value.ToUniversalTime()) &&
+                                (newReservationEndDateUtc == null ? DateTime.MaxValue : newReservationEndDateUtc.Value) >= r.StartDate.ToUniversalTime())
+                    .AnyAsync();
+
+                if (overlappingReservation)
+                {
+                    ModelState.AddModelError("InstrumentId", "Instrument je već rezerviran ili posuđen u odabranom terminu.");
+                    _logger.LogWarning("Kreiranje rezervacije: Instrument ID: {InstrumentId} je nedostupan zbog preklapanja s postojećom rezervacijom.", reservation.InstrumentId);
+                }
+            }
+            
+            // --- 3. Validate Person's Active Reservations ---
+            // Only perform this check if a person is selected and the instrument is valid
+            if (reservation.ReservedById > 0 && ModelState.IsValid) // Check ModelState.IsValid to avoid redundant errors
+            {
+                var activeReservationsCount = await _context.Reservations
+                    .CountAsync(r => r.ReservedById == reservation.ReservedById &&
+                                     (r.Status == "Confirmed" || r.Status == "Loaned") &&
+                                     (r.EndDate == null || r.EndDate.Value.ToUniversalTime().Date >= DateTime.UtcNow.Date));
+
+                if (activeReservationsCount >= 3)
+                {
+                    _logger.LogWarning("Osoba ID: {PersonId} ima previše aktivnih rezervacija ({Count}).", reservation.ReservedById, activeReservationsCount);
+                    ModelState.AddModelError("ReservedById", $"Osoba već ima {activeReservationsCount} aktivnih rezervacija (limit je 3).");
+                }
+            }
+
 
             if (ModelState.IsValid)
             {
@@ -102,26 +138,7 @@ namespace tamb.Controllers
                     await _context.SaveChangesAsync();
                     _logger.LogInformation("Rezervacija ID: {ReservationId} uspješno kreirana.", reservation.Id);
 
-                    // --- Update Instrument Status to Loaned ---
-                    var instrument = await _context.Instruments.FindAsync(reservation.InstrumentId);
-                    if (instrument != null && instrument.Status == "Available")
-                    {
-                        instrument.Status = "Loaned"; // Change status to Loaned
-                        _context.Update(instrument); // Mark instrument for update
-                        await _context.SaveChangesAsync(); // Save the instrument status change
-                        _logger.LogInformation("Status instrumenta ID: {InstrumentId} promijenjen u 'Loaned' zbog rezervacije ID: {ReservationId}.", instrument.Id, reservation.Id);
-                    }
-                    else if (instrument == null)
-                    {
-                        _logger.LogWarning("Instrument s ID: {InstrumentId} nije pronađen prilikom ažuriranja statusa nakon rezervacije.", reservation.InstrumentId);
-                    }
-                    else
-                    {
-                        _logger.LogDebug("Status instrumenta ID: {InstrumentId} nije promijenjen jer nije bio 'Available' (trenutni status: {Status}).", instrument.Id, instrument.Status);
-                    }
-                    // -----------------------------------------
-
-                    TempData["SuccessMessage"] = "Rezervacija uspješno kreirana i status instrumenta ažuriran!";
+                    TempData["SuccessMessage"] = "Rezervacija uspješno kreirana!";
                     return RedirectToAction(nameof(Index));
                 }
                 catch (Exception ex)
@@ -203,52 +220,62 @@ namespace tamb.Controllers
                 return NotFound();
             }
 
-            var activeReservationsCount = await _context.Reservations
-                .CountAsync(r => r.ReservedById == reservation.ReservedById &&
-                                 r.Id != reservation.Id &&
-                                 (r.Status == "Confirmed" || r.Status == "Loaned") &&
-                                 (r.EndDate == null || r.EndDate.Value.ToUniversalTime().Date >= DateTime.UtcNow.Date));
-
-            if (activeReservationsCount >= 3)
+            // --- 1. Validate Date Order ---
+            if (reservation.EndDate.HasValue && reservation.StartDate > reservation.EndDate.Value)
             {
-                _logger.LogWarning("Osoba ID: {PersonId} ima previše aktivnih rezervacija ({Count}) (isključujući trenutnu rezervaciju ID: {ReservationId}).", reservation.ReservedById, activeReservationsCount, reservation.Id);
-                ModelState.AddModelError("ReservedById", "Osoba već ima 3 ili više aktivnih rezervacija (isključujući ovu rezervaciju).");
+                ModelState.AddModelError("EndDate", "Datum završetka ne može biti prije datuma početka.");
+                _logger.LogWarning("Ažuriranje rezervacije: Datum završetka ({EndDate}) je prije datuma početka ({StartDate}).", reservation.EndDate, reservation.StartDate);
+            }
+
+            // --- 2. Check for Overlapping Reservations for the Instrument (excluding the current reservation) ---
+            if (reservation.InstrumentId > 0 && ModelState.IsValid)
+            {
+                var newReservationStartDateUtc = DateTime.SpecifyKind(reservation.StartDate, DateTimeKind.Utc);
+                var newReservationEndDateUtc = reservation.EndDate.HasValue ? DateTime.SpecifyKind(reservation.EndDate.Value, DateTimeKind.Utc) : (DateTime?)null;
+
+                var overlappingReservation = await _context.Reservations
+                    .Where(r => r.InstrumentId == reservation.InstrumentId &&
+                                r.Id != id && // Exclude the reservation being edited
+                                (r.Status == "Confirmed" || r.Status == "Loaned") && // Only consider active/loaned reservations
+                                // Check for overlap: (StartA <= EndB) AND (EndA >= StartB)
+                                newReservationStartDateUtc <= (r.EndDate == null ? DateTime.MaxValue : r.EndDate.Value.ToUniversalTime()) &&
+                                (newReservationEndDateUtc == null ? DateTime.MaxValue : newReservationEndDateUtc.Value) >= r.StartDate.ToUniversalTime())
+                    .AnyAsync();
+
+                if (overlappingReservation)
+                {
+                    ModelState.AddModelError("InstrumentId", "Instrument je već rezerviran ili posuđen u odabranom terminu.");
+                    _logger.LogWarning("Ažuriranje rezervacije: Instrument ID: {InstrumentId} je nedostupan zbog preklapanja s postojećom rezervacijom (isključujući trenutnu).", reservation.InstrumentId);
+                }
+            }
+            
+            // --- 3. Validate Person's Active Reservations ---
+            // Only perform this check if a person is selected and instrument is valid
+            if (reservation.ReservedById > 0 && ModelState.IsValid)
+            {
+                var activeReservationsCount = await _context.Reservations
+                    .CountAsync(r => r.ReservedById == reservation.ReservedById &&
+                                     r.Id != reservation.Id && // Exclude the current reservation being edited
+                                     (r.Status == "Confirmed" || r.Status == "Loaned") &&
+                                     (r.EndDate == null || r.EndDate.Value.ToUniversalTime().Date >= DateTime.UtcNow.Date));
+
+                if (activeReservationsCount >= 3)
+                {
+                    _logger.LogWarning("Osoba ID: {PersonId} ima previše aktivnih rezervacija ({Count}) (isključujući trenutnu rezervaciju ID: {ReservationId}).", reservation.ReservedById, activeReservationsCount, reservation.Id);
+                    ModelState.AddModelError("ReservedById", $"Osoba već ima {activeReservationsCount} aktivnih rezervacija (limit je 3).");
+                }
             }
 
             if (ModelState.IsValid)
             {
                 try
                 {
-                    var originalReservation = await _context.Reservations.AsNoTracking().FirstOrDefaultAsync(r => r.Id == id);
-                    if (originalReservation != null && originalReservation.Status != "Loaned" && reservation.Status == "Loaned")
-                    {
-                        var instrument = await _context.Instruments.FindAsync(reservation.InstrumentId);
-                        if (instrument != null && instrument.Status != "Loaned")
-                        {
-                             instrument.Status = "Loaned";
-                             _context.Update(instrument);
-                             _logger.LogInformation("Status instrumenta ID: {InstrumentId} promijenjen u 'Loaned' zbog ažuriranja rezervacije ID: {ReservationId}.", instrument.Id, reservation.Id);
-                        }
-                    }
-                     if (originalReservation != null && originalReservation.Status == "Loaned" && reservation.Status != "Loaned")
-                     {
-                         var otherActiveReservations = await _context.Reservations
-                             .AnyAsync(r => r.InstrumentId == reservation.InstrumentId &&
-                                            r.Id != reservation.Id &&
-                                            (r.Status == "Confirmed" || r.Status == "Loaned") &&
-                                            (r.EndDate == null || r.EndDate.Value.ToUniversalTime().Date >= DateTime.UtcNow.Date));
+                    // Fix datetime kind
+                    if (reservation.StartDate.Kind == DateTimeKind.Unspecified)
+                        reservation.StartDate = DateTime.SpecifyKind(reservation.StartDate, DateTimeKind.Utc);
 
-                          if (!otherActiveReservations)
-                          {
-                              var instrument = await _context.Instruments.FindAsync(reservation.InstrumentId);
-                              if (instrument != null && instrument.Status == "Loaned")
-                              {
-                                  instrument.Status = "Available";
-                                  _context.Update(instrument);
-                                  _logger.LogInformation("Status instrumenta ID: {InstrumentId} promijenjen u 'Available' jer nema drugih aktivnih rezervacija za rezervaciju ID: {ReservationId}.", instrument.Id, reservation.Id);
-                              }
-                          }
-                     }
+                    if (reservation.EndDate.HasValue && reservation.EndDate.Value.Kind == DateTimeKind.Unspecified)
+                        reservation.EndDate = DateTime.SpecifyKind(reservation.EndDate.Value, DateTimeKind.Utc);
 
                     _context.Update(reservation);
                     await _context.SaveChangesAsync();

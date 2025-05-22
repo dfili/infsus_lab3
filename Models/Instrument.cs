@@ -29,13 +29,10 @@ namespace tamb.Models
         // Condition of the instrument (e.g., "Excellent", "Good", "Fair")
         public string? Condition { get; set; }
 
-        // Current status (e.g., "Available", "Reserved", "Loaned")
-        public string? Status { get; set; }
-
         // Any additional notes or specifics
         public string? Notes { get; set; }
 
-        public List<Reservation>? Reservations { get; set; } // Navigation property for related reservations
+        public List<Reservation>? Reservations { get; set; } = new List<Reservation>(); // Navigation property for related reservations
 
     }
 }

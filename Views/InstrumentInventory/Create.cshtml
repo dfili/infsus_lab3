@@ -44,25 +44,13 @@
                 <span asp-validation-for="Year" class="text-red-600 text-sm"></span>
             </div>
 
-             <div class="mb-4">
+            <div class="mb-4">
                 <label asp-for="Condition" class="block text-sm font-medium text-gray-700"></label>
                 <input asp-for="Condition" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" />
                 <span asp-validation-for="Condition" class="text-red-600 text-sm"></span>
             </div>
 
-             <div class="mb-4">
-                <label asp-for="Status" class="block text-sm font-medium text-gray-700"></label>
-                @* Example: Use a select list for Status *@
-                <select asp-for="Status" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
-                    <option value="Available">Available</option>
-                    <option value="Reserved">Reserved</option>
-                    <option value="Loaned">Loaned</option>
-                    <option value="Maintenance">Maintenance</option>
-                </select>
-                <span asp-validation-for="Status" class="text-red-600 text-sm"></span>
-            </div>
-
-             <div class="mb-4">
+            <div class="mb-4">
                 <label asp-for="Notes" class="block text-sm font-medium text-gray-700"></label>
                 <textarea asp-for="Notes" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"></textarea>
                 <span asp-validation-for="Notes" class="text-red-600 text-sm"></span>
