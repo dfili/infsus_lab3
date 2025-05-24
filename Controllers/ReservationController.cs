@@ -29,7 +29,7 @@ namespace tamb.Controllers
         {
             _logger.LogInformation("Prikaz Rezervacija Index stranice. Filter instrumenta: {InstrumentFilter}", instrumentFilter);
 
-            var instruments = await _context.Instruments
+            List<SelectListItem> instruments = await _context.Instruments
                                             .OrderBy(i => i.Name)
                                             .Select(i => new SelectListItem
                                             {
@@ -39,8 +39,9 @@ namespace tamb.Controllers
                                             .ToListAsync();
 
             instruments.Insert(0, new SelectListItem { Value = "", Text = "Svi Instrumenti" });
+            var instrumentSelectList = new SelectList(instruments, "Value", "Text");
 
-            ViewBag.InstrumentFilter = instruments;
+            ViewBag.InstrumentFilter = instrumentSelectList;
 
             var reservations = _context.Reservations
                                 .Include(r => r.Instrument)
