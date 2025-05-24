@@ -24,19 +24,9 @@ namespace tamb.Models
         [DataType(DataType.Date)]
         public DateTime? DatumRodjenja { get; set; } // Nullable DateTime
 
-        // --- Navigation Properties ---
-
-        // Collection of Instruments this person knows how to play
-        // This represents a many-to-many relationship (a person can play many instruments, an instrument can be played by many people)
-        // In the database, this would typically be represented by a linking table.
-        // For the model, a simple list is sufficient to represent the relationship.
-        // Note: You would need to manage the linking table in your DbContext and migrations.
         [Display(Name = "Instrumenti koje svira")]
         public ICollection<Instrument> PlaysInstruments { get; set; } = new List<Instrument>();
 
-        // Collection of Reservations made by this person
-        // This represents a one-to-many relationship (one person can have many reservations)
-        // In the database, this requires a foreign key in the Rezervacija table pointing back to the Person table.
         [Display(Name = "Rezervacije")]
         public ICollection<Reservation> Rezervacije { get; set; } = new List<Reservation>();
     }

@@ -21,7 +21,6 @@ namespace tamb.Controllers
         public async Task<IActionResult> Index(string? searchString)
         {
             var instruments = _context.Instruments.AsQueryable(); 
-            
             if (!string.IsNullOrEmpty(searchString))
             {
                 ViewData["CurrentFilter"] = searchString;
