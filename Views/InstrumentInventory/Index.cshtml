@@ -44,9 +44,9 @@
                      <th scope="col" class="relative px-6 py-3">
                         <span class="sr-only">Actions</span>
                     </th>
-                    <th scope="col" class="relative px-6 py-3">
+                    @* <th scope="col" class="relative px-6 py-3">
                          <span class="sr-only">Expand</span>
-                    </th>
+                    </th> *@
                 </tr>
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
@@ -72,19 +72,19 @@
                             <a asp-action="Edit" asp-route-id="@item.Id" class="text-indigo-600 hover:text-indigo-900 mr-4">Edit</a>
                             <a asp-action="Delete" asp-route-id="@item.Id" class="text-red-600 hover:text-red-900">Delete</a>
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                            @* Optional: Add an indicator like an arrow *@
+                        @* <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                            @* Optional: Add an indicator like an arrow 
                              <span class="inline-block transform transition-transform duration-200 rotate-0 group-[.expanded]/tr:rotate-180">
-                                 &#9660; @* Down arrow character *@
+                                 &#9660; @* Down arrow character 
                              </span>
-                        </td>
+                        </td> *@
                     </tr>
                 
 
                     @* Hidden row for details and reservation *@
                     
-                    <tr class="details-row hidden bg-gray-50" data-instrument-id="@item.Id">
-                        @* This cell spans across all columns of the main row *@
+                    @*<tr class="details-row hidden bg-gray-50" data-instrument-id="@item.Id">
+                        @* This cell spans across all columns of the main row 
                         <td colspan="6" class="px-6 py-4">
                             <div class="p-4 border rounded-md bg-white shadow-inner">
                                 <h3 class="text-lg font-semibold mb-4">Details for @item.Name</h3>
@@ -108,7 +108,7 @@
                                 
                             </div>
                         </td>
-                    </tr>
+                    </tr>*@
                 }
             </tbody>
         </table>
@@ -133,11 +133,17 @@
                         return;
                     }
                     const instrumentId = this.getAttribute('data-instrument-id');
-                    const detailsRow = document.querySelector(`.details-row[data-instrument-id="${instrumentId}"]`);
+                    //const detailsRow = document.querySelector(`.details-row[data-instrument-id="${instrumentId}"]`);
 
-                    if (detailsRow) {
+                    @* if (detailsRow) {
                         detailsRow.classList.toggle('hidden');
                         this.classList.toggle('expanded');
+                    } *@
+                    if (instrumentId) {
+                        // Redirect to the Instrument Details page
+                        // Assuming your InstrumentController is named "Instrument"
+                        // and the action is "Details"
+                        window.location.href = `/InstrumentInventory/Details/${instrumentId}`;
                     }
 
                 });
