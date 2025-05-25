@@ -160,7 +160,7 @@ namespace tamb.Controllers
 
         // Action method for the Instrument Details page
         // Displays specifics of a single instrument
-        public IActionResult Details(int? id) // Nullable int for the ID
+        public async Task<IActionResult> Details(int? id) // Nullable int for the ID
         {
             // If no ID is provided, return a Not Found result
             if (id == null)
@@ -169,9 +169,11 @@ namespace tamb.Controllers
             }
 
             // Find the instrument by ID in the in-memory list
-            var instrument = _context.Instruments.AsQueryable().FirstOrDefault(i => i.Id == id);
-
-            // If the instrument is not found, return a Not Found result
+            //var instrument = _context.Instruments.AsQueryable().FirstOrDefault(i => i.Id == id);
+            var instrument = await _context.Instruments.Include(i => i.Reservations!) // Eagerly load related Reservations
+                    .ThenInclude(r => r.ReservedBy) // Also include the Person who made the reservation
+                .FirstOrDefaultAsync(m => m.Id == id);
+// If the instrument is not found, return a Not Found result
             if (instrument == null)
             {
                 return NotFound();
