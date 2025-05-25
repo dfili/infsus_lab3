@@ -144,19 +144,25 @@ namespace tamb.Controllers
         // POST: Inventory/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id) // Takes the ID to delete
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
-
             var instrument = await _context.Instruments.FindAsync(id);
-            TempData["SuccessMessage"] = "Instrument uspješno izbrisan!";
-            if (instrument != null)
+
+            if (instrument == null)
             {
-                _context.Instruments.Remove(instrument);
+                return NotFound();
             }
 
+            _context.Instruments.Remove(instrument);
             await _context.SaveChangesAsync();
+            if (TempData != null)
+            {
+                TempData["SuccessMessage"] = "Instrument uspješno izbrisan!";
+            }
+
             return RedirectToAction(nameof(Index));
         }
+
 
         // Action method for the Instrument Details page
         // Displays specifics of a single instrument
