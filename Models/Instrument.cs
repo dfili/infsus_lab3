@@ -32,7 +32,7 @@ namespace tamb.Models
         // Any additional notes or specifics
         public string? Notes { get; set; }
 
-        public List<Reservation>? Reservations { get; set; } = new List<Reservation>(); // Navigation property for related reservations
+        public List<Reservation> Reservations { get; set; } = new List<Reservation>(); // Navigation property for related reservations
 
     }
 }

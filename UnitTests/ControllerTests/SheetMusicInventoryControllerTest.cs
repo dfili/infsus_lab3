@@ -34,10 +34,15 @@ namespace UnitTests
                 await context.SaveChangesAsync();
 
                 var controller = new SheetMusicInventoryController(context);
+
                 var result = await controller.Index(null) as ViewResult;
+                Assert.NotNull(result);
 
                 var model = Assert.IsAssignableFrom<List<SheetMusic>>(result.ViewData.Model);
+                Assert.NotNull(model);
+
                 Assert.Equal(2, model.Count);
+
             }
         }
 
@@ -53,9 +58,13 @@ namespace UnitTests
                 await context.SaveChangesAsync();
 
                 var controller = new SheetMusicInventoryController(context);
+
                 var result = await controller.Index("Oda") as ViewResult;
+                Assert.NotNull(result);
 
                 var model = Assert.IsAssignableFrom<List<SheetMusic>>(result.ViewData.Model);
+                Assert.NotNull(model);
+
                 Assert.Single(model);
                 Assert.Equal("Oda radosti", model.First().Title);
             }

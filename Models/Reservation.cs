@@ -19,14 +19,14 @@ namespace tamb.Models
         // Navigation property to the reserved Instrument
         [ForeignKey("InstrumentId")]
         [ValidateNever]
-        public Instrument Instrument { get; set; }
+        public Instrument? Instrument { get; set; }
 
         // User or entity making the reservation
         [Display(Name = "Rezervirao/la")]
         public int ReservedById { get; set; }
         [ForeignKey("ReservedById")]
         [ValidateNever]
-        public Person ReservedBy { get; set; }
+        public Person? ReservedBy { get; set; }
 
         // Start date of the reservation
         [Display(Name = "Datum početka")]

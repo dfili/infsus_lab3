@@ -18,7 +18,7 @@ namespace tamb.Controllers
 
         // Action method for the Sheet Music Inventory Index page
         // Handles displaying the list of sheet music
-        public async Task<IActionResult> Index(string searchString) // Made async to use async EF Core methods
+        public async Task<IActionResult> Index(string? searchString) // Made async to use async EF Core methods
         {
             // Start query from the DbContext's DbSet for SheetMusic
             var sheetMusic = _context.SheetMusic.AsQueryable();
@@ -27,10 +27,13 @@ namespace tamb.Controllers
             if (!string.IsNullOrEmpty(searchString))
             {
                 // Filter by Title, Composer, Instrumentation, or Genre
-                sheetMusic = sheetMusic.Where(s => s.Title.Contains(searchString)
-                                                   || s.Composer.Contains(searchString)
-                                                   || s.Instrumentation.Contains(searchString)
-                                                   || s.Genre.Contains(searchString));
+                sheetMusic = sheetMusic.Where(s =>
+                    (s.Title != null && s.Title.Contains(searchString)) ||
+                    (s.Composer != null && s.Composer.Contains(searchString)) ||
+                    (s.Instrumentation != null && s.Instrumentation.Contains(searchString)) ||
+                    (s.Genre != null && s.Genre.Contains(searchString))
+                );
+
             }
 
             // Pass the filtered list of sheet music to the view after executing the query asynchronously
